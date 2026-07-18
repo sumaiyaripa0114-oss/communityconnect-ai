@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CommunityConnect AI</title>
+  <meta name="description" content="Decision-support prototype for frontline workers helping older adults navigate community resources, benefits, and care services." />
+  <style>
+    :root{
+      --forest:#173d33;
+      --forest-2:#245c4d;
+      --gold:#b88a2e;
+      --paper:#f7f4ec;
+      --panel:#ffffff;
+      --ink:#18231f;
+      --muted:#66736d;
+      --line:#d8ded9;
+      --soft:#edf2ef;
+      --warning:#fff5dd;
+      --shadow:0 16px 40px rgba(24,35,31,.10);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:var(--paper);
+      color:var(--ink);
+    }
+    button,input,textarea{font:inherit}
+    .app{min-height:100vh;display:grid;grid-template-columns:270px 1fr}
+    .sidebar{
+      background:var(--forest);
+      color:#fff;
+      padding:28px 20px;
+      position:sticky;
+      top:0;
+      height:100vh;
+      overflow:auto;
+    }
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+    .brand-mark{
+      width:38px;height:38px;border-radius:10px;background:var(--gold);
+      display:grid;place-items:center;color:var(--forest);font-weight:800
+    }
+    .brand-title{font-weight:800;letter-spacing:.2px}
+    .brand-sub{font-size:12px;color:#c8d7d1;margin:0 0 26px 50px}
+    .nav{display:grid;gap:8px}
+    .nav button{
+      border:0;background:transparent;color:#dce8e4;text-align:left;
+      padding:12px 14px;border-radius:10px;cursor:pointer
+    }
+    .nav button:hover,.nav button.active{background:rgba(255,255,255,.12);color:#fff}
+    .sidebar-note{
+      margin-top:24px;padding:14px;border:1px solid rgba(255,255,255,.16);
+      border-radius:12px;color:#cbd8d3;font-size:12px;line-height:1.5
+    }
+    main{min-width:0}
+    .topbar{
+      background:#fff;border-bottom:1px solid var(--line);padding:14px 28px;
+      display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5
+    }
+    .status{font-size:13px;color:var(--muted)}
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;padding:6px 10px;
+      background:var(--soft);border-radius:999px;font-size:12px;font-weight:700;color:var(--forest)
+    }
+    .content{padding:42px;max-width:1180px;margin:auto}
+    .view{display:none}
+    .view.active{display:block}
+    .hero{
+      background:linear-gradient(135deg,#fdfcf8,#eef4f0);
+      border:1px solid var(--line);border-radius:24px;padding:46px;box-shadow:var(--shadow)
+    }
+    h1,h2,h3{font-family:Georgia,"Times New Roman",serif;color:var(--forest);margin-top:0}
+    h1{font-size:48px;line-height:1.05;margin-bottom:18px}
+    h2{font-size:34px;margin-bottom:10px}
+    h3{font-size:22px}
+    .lead{font-size:20px;line-height:1.6;color:#43514b;max-width:850px}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+    .btn{
+      border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer
+    }
+    .btn.primary{background:var(--forest);color:#fff}
+    .btn.secondary{background:#fff;color:var(--forest);border:1px solid var(--line)}
+    .btn:disabled{opacity:.6;cursor:wait}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:24px}
+    .card{
+      background:var(--panel);border:1px solid var(--line);border-radius:18px;
+      padding:22px;box-shadow:0 8px 22px rgba(24,35,31,.05)
+    }
+    .card p{color:var(--muted);line-height:1.6}
+    .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:800;color:var(--gold)}
+    .notice{
+      background:var(--warning);border-left:4px solid var(--gold);padding:16px 18px;
+      border-radius:10px;margin:20px 0;color:#6e531b;line-height:1.55
+    }
+    label{display:block;font-weight:800;margin:18px 0 8px}
+    textarea,input{
+      width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;
+      padding:14px;color:var(--ink)
+    }
+    textarea{min-height:150px;resize:vertical}
+    .tool-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:22px;align-items:start}
+    .sample-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .chip{
+      background:var(--soft);color:var(--forest);border:0;border-radius:999px;
+      padding:8px 11px;font-size:12px;font-weight:700;cursor:pointer
+    }
+    .result{
+      background:#fff;border:1px solid var(--line);border-radius:16px;
+      padding:22px;min-height:240px;line-height:1.6
+    }
+    .result.empty{display:grid;place-items:center;color:var(--muted);text-align:center}
+    .result h3{margin-top:18px;margin-bottom:8px}
+    .result ul{padding-left:20px}
+    .result-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+    .mini{padding:8px 11px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer}
+    .footer{padding:28px 42px 40px;color:var(--muted);font-size:13px;max-width:1180px;margin:auto}
+    .loading{display:flex;align-items:center;gap:10px;color:var(--forest);font-weight:700}
+    .spinner{width:18px;height:18px;border:3px solid #dbe5e0;border-top-color:var(--forest);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media (max-width:900px){
+      .app{grid-template-columns:1fr}
+      .sidebar{position:relative;height:auto}
+      .nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .topbar{position:relative}
+      .content{padding:24px}
+      .tool-layout,.grid{grid-template-columns:1fr}
+      h1{font-size:38px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">CC</div>
+        <div class="brand-title">CommunityConnect AI</div>
+      </div>
+      <p class="brand-sub">Frontline decision-support prototype</p>
+      <nav class="nav" aria-label="Primary">
+        <button class="active" data-view="home">Home</button>
+        <button data-view="navigator">Needs Navigator</button>
+        <button data-view="notes">Case Note Assistant</button>
+        <button data-view="documents">Document Search</button>
+        <button data-view="coach">Conversation Coach</button>
+        <button data-view="about">About</button>
+      </nav>
+      <div class="sidebar-note">
+        This public version runs in demo mode and stores no client information. It does not determine eligibility or replace professional judgment.
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="status">NYC-focused prototype for older-adult services</div>
+        <span class="badge">● Demo mode</span>
+      </div>
+
+      <div class="content">
+        <section id="home" class="view active">
+          <div class="hero">
+            <div class="eyebrow">A no-wrong-door starting point</div>
+            <h1>Help frontline workers see the whole situation.</h1>
+            <p class="lead">
+              CommunityConnect AI organizes scattered needs, possible programs, verification steps, and follow-up questions so older adults are less likely to fall through the cracks.
+            </p>
+            <div class="hero-actions">
+              <button class="btn primary" data-go="navigator">Try the Needs Navigator</button>
+              <button class="btn secondary" data-go="about">See how it works</button>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="card"><div class="eyebrow">1</div><h3>Describe the situation</h3><p>Workers can enter a messy, real-world case in plain language without knowing the correct program name.</p></div>
+            <div class="card"><div class="eyebrow">2</div><h3>Surface connected needs</h3><p>The prototype highlights care, medication, food, housing, transportation, and caregiver issues that may overlap.</p></div>
+            <div class="card"><div class="eyebrow">3</div><h3>Get practical next steps</h3><p>Responses are structured around questions to ask, programs to explore, places to verify, and risks to watch.</p></div>
+            <div class="card"><div class="eyebrow">4</div><h3>Keep the worker in control</h3><p>The tool supports judgment rather than making eligibility, medical, legal, or coverage decisions.</p></div>
+          </div>
+        </section>
+
+        <section id="navigator" class="view">
+          <h2>Needs Navigator</h2>
+          <p class="lead">Describe an older adult's situation in plain language. The tool will organize likely needs and safe next steps.</p>
+          <div class="notice">This prototype never states that someone qualifies for a program. Verify current details with the cited agency or a qualified professional.</div>
+          <div class="tool-layout">
+            <div class="card">
+              <label for="navInput">Describe the situation</label>
+              <textarea id="navInput" placeholder="Example: An older adult just returned home from the hospital, lives alone, and cannot afford prescriptions..."></textarea>
+              <div class="sample-row">
+                <button class="chip" data-sample="hospital">Hospital discharge</button>
+                <button class="chip" data-sample="housing">Housing crisis</button>
+                <button class="chip" data-sample="caregiver">Caregiver strain</button>
+              </div>
+              <button class="btn primary" id="navRun" style="margin-top:18px">Identify needs and next steps</button>
+            </div>
+            <div>
+              <div id="navResult" class="result empty">Your structured response will appear here.</div>
+              <div class="result-actions"><button class="mini" data-copy="navResult">Copy response</button></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="notes" class="view">
+          <h2>Case Note Assistant</h2>
+          <p class="lead">Turn rough interaction notes into a clear, neutral follow-up record without inventing facts.</p>
+          <div class="tool-layout">
+            <div class="card">
+              <label for="caseId">Client or case identifier</label>
+              <input id="caseId" placeholder="Example: Case 1042" />
+              <label for="noteInput">Rough notes</label>
+              <textarea id="noteInput" placeholder="Example: Spoke with daughter. Client discharged Monday. Needs medication help and transportation..."></textarea>
+              <button class="btn primary" id="noteRun" style="margin-top:18px">Organize case note</button>
+            </div>
+            <div>
+              <div id="noteResult" class="result empty">Your organized case note will appear here.</div>
+              <div class="result-actions"><button class="mini" data-copy="noteResult">Copy note</button></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="documents" class="view">
+          <h2>Document Search</h2>
+          <p class="lead">Ask a question about pasted policy or program text and receive a cautious, document-grounded summary.</p>
+          <div class="tool-layout">
+            <div class="card">
+              <label for="docInput">Paste document text</label>
+              <textarea id="docInput" placeholder="Paste a policy excerpt, benefits notice, or program description..."></textarea>
+              <label for="docQuestion">Question</label>
+              <input id="docQuestion" placeholder="What does this say about transportation?" />
+              <button class="btn primary" id="docRun" style="margin-top:18px">Search the document</button>
+            </div>
+            <div>
+              <div id="docResult" class="result empty">A source-limited answer will appear here.</div>
+              <div class="result-actions"><button class="mini" data-copy="docResult">Copy answer</button></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="coach" class="view">
+          <h2>Conversation Coach</h2>
+          <p class="lead">Get respectful language for difficult conversations while avoiding promises the worker cannot make.</p>
+          <div class="tool-layout">
+            <div class="card">
+              <label for="coachInput">Describe the conversation</label>
+              <textarea id="coachInput" placeholder="Example: The client is upset because another agency denied services and believes nobody is helping..."></textarea>
+              <button class="btn primary" id="coachRun" style="margin-top:18px">Suggest language</button>
+            </div>
+            <div>
+              <div id="coachResult" class="result empty">Conversation guidance will appear here.</div>
+              <div class="result-actions"><button class="mini" data-copy="coachResult">Copy guidance</button></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="about" class="view">
+          <h2>About CommunityConnect AI</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>The problem</h3>
+              <p>Frontline workers often receive incomplete stories that cross Medicare, Medicaid, home care, food, housing, transportation, prescription costs, and caregiver support.</p>
+            </div>
+            <div class="card">
+              <h3>The approach</h3>
+              <p>CommunityConnect AI structures the situation, surfaces connected needs, proposes questions, and points to places where current information should be verified.</p>
+            </div>
+            <div class="card">
+              <h3>Built for safety</h3>
+              <p>The prototype does not determine eligibility, coverage, medical necessity, legal rights, or benefits. It is designed to support—not replace—human judgment.</p>
+            </div>
+            <div class="card">
+              <h3>Future direction</h3>
+              <p>A production version could use Claude through a secure backend, organization-approved resources, role-based access, and privacy controls.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer">
+        CommunityConnect AI · Public demo prototype · No client data is stored.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const samples = {
+      hospital: "An 82-year-old woman in Queens just returned home from the hospital. She lives alone, her daughter works full-time, she is struggling to afford prescriptions, and she has not left her apartment in several weeks.",
+      housing: "A 76-year-old renter received an eviction notice, has limited income, uses a walker, and is worried about losing access to nearby doctors and pharmacies.",
+      caregiver: "A daughter is caring for her 88-year-old father with memory problems. She is missing work, feels exhausted, and does not know what home-care or respite options exist."
+    };
+
+    function showView(id){
+      document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === id));
+      document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === id));
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+
+    document.querySelectorAll("[data-view]").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.view)));
+    document.querySelectorAll("[data-go]").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.go)));
+    document.querySelectorAll("[data-sample]").forEach(btn => btn.addEventListener("click", () => {
+      document.getElementById("navInput").value = samples[btn.dataset.sample];
+    }));
+
+    function setLoading(resultId, button){
+      const target = document.getElementById(resultId);
+      target.classList.remove("empty");
+      target.innerHTML = '<div class="loading"><span class="spinner"></span>Organizing the information...</div>';
+      button.disabled = true;
+    }
+
+    function setResult(resultId, button, html){
+      const target = document.getElementById(resultId);
+      target.classList.remove("empty");
+      target.innerHTML = html;
+      button.disabled = false;
+    }
+
+    function escapeHtml(value){
+      return value.replace(/[&<>"']/g, char => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      })[char]);
+    }
+
+    function needsResponse(text){
+      const t = text.toLowerCase();
+      const needs = [];
+      if (/hospital|discharg|lives alone|home care|bathing|dressing/.test(t)) needs.push("In-home support and discharge follow-up");
+      if (/prescription|medication|drug|afford/.test(t)) needs.push("Prescription-cost support");
+      if (/evict|rent|housing|landlord/.test(t)) needs.push("Housing stability");
+      if (/caregiver|daughter|son|exhausted|respite/.test(t)) needs.push("Caregiver support");
+      if (/isolat|has not left|hasn't left|transport|appointment/.test(t)) needs.push("Transportation and social connection");
+      if (!needs.length) needs.push("General benefits and care-navigation support");
+
+      return `
+        <h3>Needs identified</h3>
+        <ul>${needs.map(n => `<li><strong>${n}</strong></li>`).join("")}</ul>
+        <h3>Programs worth exploring</h3>
+        <ul>
+          <li><strong>NY Connects:</strong> A free starting point for long-term services and supports.</li>
+          <li><strong>NYC Aging:</strong> In-home services, case management, transportation, caregiver support, and older adult centers.</li>
+          <li><strong>EPIC:</strong> Worth checking for New York residents age 65+ struggling with Medicare Part D costs.</li>
+          <li><strong>HIICAP or 1-800-MEDICARE:</strong> For Medicare coverage and prescription-benefit questions.</li>
+        </ul>
+        <h3>Questions to ask</h3>
+        <ul>
+          <li>Does the client currently have Medicaid?</li>
+          <li>What help is needed at home right now?</li>
+          <li>Was a discharge plan or referral provided?</li>
+          <li>Is there an immediate risk involving medication, food, falls, or missed appointments?</li>
+          <li>Who is available to help, and how often?</li>
+        </ul>
+        <h3>Where to verify</h3>
+        <ul>
+          <li>NY Connects: 1-800-342-9871</li>
+          <li>Aging Connect: 212-244-6469</li>
+          <li>Medicare: 1-800-MEDICARE</li>
+          <li>NYC information: 311</li>
+        </ul>
+        <h3>Important limitation</h3>
+        <p>This prototype organizes possible needs and starting points. It does not determine eligibility, coverage, or medical necessity.</p>`;
+    }
+
+    function noteResponse(caseId, notes){
+      return `
+        <h3>Client or case identifier</h3>
+        <p>${escapeHtml(caseId || "Not provided")}</p>
+        <h3>Reason for contact</h3>
+        <p>The client or representative contacted the organization regarding the concerns described in the original notes.</p>
+        <h3>Key information discussed</h3>
+        <p>${escapeHtml(notes)}</p>
+        <h3>Actions completed</h3>
+        <ul><li>The interaction and stated concerns were documented.</li><li>No actions were assumed beyond the information provided.</li></ul>
+        <h3>Follow-up needed</h3>
+        <ul><li>Confirm any promised calls, referrals, documents, or deadlines.</li><li>Verify unresolved details with the appropriate agency or professional.</li><li>Document the responsible staff member and next contact date.</li></ul>`;
+    }
+
+    function documentResponse(doc, question){
+      const words = question.toLowerCase().split(/\W+/).filter(w => w.length > 4);
+      const sentences = doc.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [];
+      const matches = sentences.filter(s => words.some(w => s.toLowerCase().includes(w))).slice(0,4);
+
+      if (!matches.length){
+        return `<h3>Answer</h3><p>The pasted text does not clearly contain enough information to answer this question.</p><h3>What to do next</h3><p>Review the full document or verify the issue with the organization that issued it.</p>`;
+      }
+
+      return `
+        <h3>Answer</h3>
+        <p>The most relevant passages are:</p>
+        <ul>${matches.map(s => `<li>${escapeHtml(s.trim())}</li>`).join("")}</ul>
+        <h3>Source limitation</h3>
+        <p>This answer is based only on the text pasted into the prototype and should not be treated as a full interpretation of the complete document.</p>`;
+    }
+
+    function coachResponse(text){
+      return `
+        <h3>What may be happening</h3>
+        <p>The client may feel frustrated, worried, or dismissed. Acknowledging that experience can make the conversation more respectful before discussing limits or next steps.</p>
+        <h3>Lines you could use</h3>
+        <ul>
+          <li>“I understand why this feels frustrating.”</li>
+          <li>“I do not want to leave you without a clear next step.”</li>
+          <li>“I may not control the final decision, but I can help identify where to verify it.”</li>
+          <li>“Before we end, let’s make sure you know exactly who to contact and what information to have ready.”</li>
+        </ul>
+        <h3>What to avoid</h3>
+        <ul><li>Promising an outcome you cannot control.</li><li>Dismissive phrases such as “That is not our problem.”</li><li>Technical language without explanation.</li></ul>
+        <h3>One thing to remember</h3>
+        <p>The goal is to help the client leave with clarity, dignity, and a realistic next step.</p>`;
+    }
+
+    document.getElementById("navRun").addEventListener("click", async function(){
+      const text = document.getElementById("navInput").value.trim();
+      if (!text) return alert("Please describe the situation first.");
+      setLoading("navResult", this);
+      await new Promise(r => setTimeout(r, 700));
+      setResult("navResult", this, needsResponse(text));
+    });
+
+    document.getElementById("noteRun").addEventListener("click", async function(){
+      const notes = document.getElementById("noteInput").value.trim();
+      const caseId = document.getElementById("caseId").value.trim();
+      if (!notes) return alert("Please enter rough notes first.");
+      setLoading("noteResult", this);
+      await new Promise(r => setTimeout(r, 650));
+      setResult("noteResult", this, noteResponse(caseId, notes));
+    });
+
+    document.getElementById("docRun").addEventListener("click", async function(){
+      const doc = document.getElementById("docInput").value.trim();
+      const q = document.getElementById("docQuestion").value.trim();
+      if (!doc || !q) return alert("Please paste document text and enter a question.");
+      setLoading("docResult", this);
+      await new Promise(r => setTimeout(r, 650));
+      setResult("docResult", this, documentResponse(doc, q));
+    });
+
+    document.getElementById("coachRun").addEventListener("click", async function(){
+      const text = document.getElementById("coachInput").value.trim();
+      if (!text) return alert("Please describe the conversation first.");
+      setLoading("coachResult", this);
+      await new Promise(r => setTimeout(r, 650));
+      setResult("coachResult", this, coachResponse(text));
+    });
+
+    document.querySelectorAll("[data-copy]").forEach(btn => btn.addEventListener("click", async () => {
+      const target = document.getElementById(btn.dataset.copy);
+      const text = target.innerText.trim();
+      if (!text || target.classList.contains("empty")) return;
+      await navigator.clipboard.writeText(text);
+      const old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => btn.textContent = old, 1200);
+    }));
+  </script>
+</body>
+</html>
